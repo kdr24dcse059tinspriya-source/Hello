@@ -343,5 +343,947 @@ main{position:relative;z-index:1;padding:1.5rem;max-width:1300px;margin:0 auto}
   </div>
 </div>
 <main>
+  <!-- ════════════════ STUDENT SECTION ════════════════ -->
+  <div id="secStudent">
 
-  <!-- ══
+    <!-- PAGE: Student List -->
+    <div id="pageList" class="page">
+      <div class="slabel">CSE BATCH 2025-26</div>
+      <h1 class="page-title">Select Your <span style="color:var(--accent)">Name</span></h1>
+      <p class="page-sub">Click your name to begin the speaking assessment</p>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInp" placeholder="Search by name or roll number…" oninput="filterStudents()">
+      </div>
+      <div class="s-grid" id="sGrid"></div>
+    </div>
+
+    <!-- PAGE: Speaking Assessment -->
+    <div id="pageSpeak" style="display:none" class="page">
+      <button class="back-btn" onclick="goBack()">← Back to Students</button>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem">
+        <div>
+          <div class="slabel">SPEAKING ASSESSMENT</div>
+          <h2 style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.6rem" id="spName">—</h2>
+        </div>
+        <div id="todayTag"></div>
+      </div>
+
+      <div class="no-img-msg" id="noImgMsg" style="display:none">
+        ⏳ No image is scheduled for today. Please check back on the assigned date.
+      </div>
+
+      <div id="speakContent">
+        <div class="speak-grid">
+
+          <!-- LEFT -->
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <!-- Image -->
+            <div class="img-panel" id="imgPanel">
+              <div class="img-empty" id="imgEmpty">
+                <svg width="44" height="44" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span style="font-size:.83rem">Today's image appears here</span>
+              </div>
+              <img id="todayImg" src="" alt="Describe this image" style="display:none">
+              <div class="img-corner" id="imgDateBadge" style="display:none"></div>
+              <div class="img-foot" id="imgFoot" style="display:none">Describe what you see — speak for up to 3 minutes</div>
+            </div>
+
+            <!-- Past Submissions -->
+            <div class="card" id="pastCard" style="display:none">
+              <div class="card-title">📋 Your Previous Submissions</div>
+              <div id="pastList"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Recorder -->
+          <div style="display:flex;flex-direction:column;gap:.9rem">
+            <!-- Browser tip -->
+            <div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.18);border-radius:9px;padding:.65rem 1rem;font-size:.75rem;color:var(--muted2)">
+              💡 <strong style="color:var(--accent)">Tip:</strong> Use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> for best microphone &amp; speech recognition support. When prompted, click <strong>Allow</strong> for microphone access.
+            </div>
+            <div class="card">
+              <div class="card-title">
+                <span id="recIndicator" style="display:none"><span class="rec-dot"></span></span>
+                🎙 Voice Recorder
+              </div>
+
+              <div class="timer-wrap">
+                <div class="timer-svg">
+                  <svg width="96" height="96" viewBox="0 0 96 96">
+                    <circle cx="48" cy="48" r="40" fill="none" stroke="var(--border2)" stroke-width="6"/>
+                    <circle id="timerRing" cx="48" cy="48" r="40" fill="none" stroke="var(--accent)"
+                      stroke-width="6" stroke-linecap="round"
+                      stroke-dasharray="251.33" stroke-dashoffset="0"/>
+                  </svg>
+                  <div class="timer-num" id="timerNum">3:00</div>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:.4rem">MAX 3 MINUTES</div>
+              </div>
+
+              <div class="waveform"><canvas id="waveCanvas" width="400" height="44"></canvas></div>
+
+              <div class="rec-row">
+                <button class="btn btn-accent" id="btnRec" onclick="startRec()">⏺ Record</button>
+                <button class="btn btn-red" id="btnStop" onclick="stopRec()" disabled>⏹ Stop</button>
+                <button class="btn btn-ghost" id="btnPlay" onclick="playRec()" disabled>▶ Play</button>
+              </div>
+
+              <!-- Mic Error -->
+              <div id="micErrorBox" style="display:none;margin-top:.8rem;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:9px;padding:.8rem 1rem;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--red);margin-bottom:4px">🎤 MICROPHONE ERROR</div>
+                <div id="micErrorTxt" style="font-size:.8rem;color:var(--muted2);line-height:1.5"></div>
+              </div>
+
+              <!-- Live Caption -->
+              <div style="margin-top:.7rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;min-height:40px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-bottom:3px">LIVE CAPTION</div>
+                <div id="liveCaption" style="font-size:.8rem;color:var(--muted2);line-height:1.5;font-style:italic">Start speaking after pressing Record…</div>
+              </div>
+            </div>
+
+            <button class="btn btn-green btn-full" id="btnAnalyse" onclick="analyse()" disabled>
+              🔍 Analyse My Speech
+            </button>
+
+            <!-- Results -->
+            <div class="card" id="resultsCard" style="display:none">
+              <div class="card-title">📊 Analysis Results</div>
+              <div class="score-row" id="scoreRow"></div>
+              <div class="fgroup">
+                <label class="flabel">YOUR TRANSCRIPT</label>
+                <div class="tbox" id="transcriptBox"></div>
+              </div>
+              <div class="fgroup">
+                <label class="flabel">CORRECTED VERSION</label>
+                <div class="cbox" id="correctedBox"></div>
+              </div>
+              <div id="mistakesWrap">
+                <label class="flabel">GRAMMAR &amp; VOCABULARY MISTAKES</label>
+                <div id="mistakesList"></div>
+              </div>
+              <button class="btn btn-accent btn-full" id="btnSave" onclick="saveSubmission()" style="margin-top:.9rem">
+                💾 Save Submission
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+    <!-- ════════════════ TEACHER SECTION ════════════════ -->
+  <div id="secTeacher" style="display:none" class="page">
+    <div class="t-header">
+      <div>
+        <div class="slabel">TEACHER DASHBOARD</div>
+        <h1 class="page-title">Welcome, <span style="color:var(--accent)">Tej Pratap</span> 🎓</h1>
+        <p class="page-sub" style="margin-bottom:0">Upload images &amp; track student submissions</p>
+      </div>
+      <button class="btn btn-ghost" onclick="lockTeacher()">🔒 Lock</button>
+    </div>
+
+    <div class="t-grid">
+
+      <!-- LEFT COL -->
+      <div style="display:flex;flex-direction:column;gap:1rem">
+
+        <!-- Upload -->
+        <div class="card">
+          <div class="card-title">📤 Upload Image</div>
+          <div class="upload-zone" id="uploadZone"
+            onclick="document.getElementById('fileInp').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)">
+            <input type="file" id="fileInp" accept="image/*" onchange="handleFile(event)">
+            <div class="uz-icon">🖼️</div>
+            <div class="uz-text">Click or drag &amp; drop image here</div>
+            <div style="font-size:.72rem;color:var(--muted);margin-top:4px">PNG · JPG · WEBP</div>
+          </div>
+          <div id="previewWrap" style="display:none;margin-top:.8rem">
+            <img id="previewImg" style="width:100%;border-radius:8px;border:1px solid var(--border);max-height:180px;object-fit:cover" src="" alt="">
+          </div>
+          <div class="fgroup" style="margin-top:.9rem">
+            <label class="flabel">IMAGE TITLE / TOPIC</label>
+            <input type="text" class="finput" id="imgTitle" placeholder="e.g. Busy Market Scene">
+          </div>
+          <div class="fgroup">
+            <label class="flabel">SCHEDULED DATE</label>
+            <input type="date" class="finput" id="imgDate">
+          </div>
+          <button class="btn btn-accent btn-full" onclick="scheduleImg()">📅 Schedule Image</button>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card">
+          <div class="card-title">🔑 Change Password</div>
+          <div class="cp-wrap">
+            <div class="fgroup">
+              <label class="flabel">CURRENT PASSWORD</label>
+              <input type="password" class="finput" id="cpCur" placeholder="Enter current password">
+            </div>
+            <div class="fgroup">
+              <label class="flabel">NEW PASSWORD</label>
+              <input type="password" class="finput" id="cpNew" placeholder="Min 4 characters" oninput="chkCp()">
+            </div>
+            <div class="fgroup">
+              <label class="flabel">CONFIRM NEW PASSWORD</label>
+              <input type="password" class="finput" id="cpCon" placeholder="Confirm new password" oninput="chkCp()" onkeydown="if(event.key==='Enter')doChangePw()">
+            </div>
+            <div class="err-msg" id="cpMsg"></div>
+            <button class="btn btn-accent btn-full" id="btnCp" onclick="doChangePw()" disabled>🔒 Update Password</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COL -->
+      <div style="display:flex;flex-direction:column;gap:1rem">
+
+        <!-- Scheduled Images -->
+        <div class="card">
+          <div class="card-title">🗓 Scheduled Images</div>
+          <div id="schedList"><div style="color:var(--muted);font-size:.83rem;padding:1.5rem 0;text-align:center">No images scheduled yet</div></div>
+        </div>
+
+        <!-- Student Progress -->
+        <div class="card">
+          <div class="card-title">📈 Student Progress (Today)</div>
+          <div id="progressWrap"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+// STUDENT DATA
+// ══════════════════════════════════════════════════
+const STUDENTS = [
+  {id:'s001',name:'PUPPALA SREE RAMYA',roll:'24007-CS-001'},
+  {id:'s002',name:'N PUNYAVATHI',roll:'24007-CS-002'},
+  {id:'s003',name:'UCHLAPOGU AKHILA',roll:'24007-CS-003'},
+  {id:'s004',name:'R C CHAITANYA',roll:'24007-CS-004'},
+  {id:'s005',name:'AMOGH VYSHNAVI',roll:'24007-CS-005'},
+  {id:'s006',name:'BADDULA MANOJ YADAV',roll:'24007-CS-006'},
+  {id:'s007',name:'SERODDULA CHANDRASHEKHAR',roll:'24007-CS-007'},
+  {id:'s008',name:'SHAKALA SAI BHARATH',roll:'24007-CS-008'},
+  {id:'s009',name:'CHENCHATI JASHWANTH SAGAR',roll:'24007-CS-009'},
+  {id:'s010',name:'VANGURU ROHITH',roll:'24007-CS-010'},
+  {id:'s011',name:'VULIGONI PALLY SAI CHARAN',roll:'24007-CS-011'},
+  {id:'s012',name:'T AMOS',roll:'24007-CS-012'},
+  {id:'s013',name:'M KARAN NAYAK',roll:'24007-CS-013'},
+  {id:'s015',name:'N SHRUTHI',roll:'24007-CS-015'},
+  {id:'s016',name:'KAMSALI NAVYAJYOTHI',roll:'24007-CS-016'},
+  {id:'s017',name:'S VASUDEV',roll:'24007-CS-017'},
+  {id:'s018',name:'RAKASI TRISHA',roll:'24007-CS-018'},
+  {id:'s019',name:'GANNOJI SHIVACHARAN TEJA',roll:'24007-CS-019'},
+  {id:'s020',name:'BANDIKANTI HARSHITHA',roll:'24007-CS-020'},
+  {id:'s021',name:'MOGILI HIMABINDU',roll:'24007-CS-021'},
+  {id:'s022',name:'THAKUR SRI VIDYA BAI',roll:'24007-CS-022'},
+  {id:'s023',name:'KANDE SAIVENKAT',roll:'24007-CS-023'},
+  {id:'s024',name:'PALUGUMEEDI SHIVAMMA',roll:'24007-CS-024'},
+  {id:'s025',name:'M NANDHINI',roll:'24007-CS-025'},
+  {id:'s026',name:'ETTE VINOD KUMAR',roll:'24007-CS-026'},
+  {id:'s027',name:'PENNITI SRINATH REDDY',roll:'24007-CS-027'},
+  {id:'s028',name:'G LAVANYA',roll:'24007-CS-028'},
+  {id:'s029',name:'C MAMATHA',roll:'24007-CS-029'},
+  {id:'s030',name:'MK RAGHURAM',roll:'24007-CS-030'},
+  {id:'s031',name:'PARIPATI RAVI KUMAR',roll:'24007-CS-031'},
+  {id:'s032',name:'TELIJIRI PRAVALIKA',roll:'24007-CS-032'},
+  {id:'s033',name:'NEELAM USHARANI',roll:'24007-CS-033'},
+  {id:'s035',name:'CHINTHAKUNTA VIJAY KUMAR',roll:'24007-CS-035'},
+  {id:'s036',name:'BATTINI SIRI',roll:'24007-CS-036'},
+  {id:'s037',name:'MA AYESHA',roll:'24007-CS-037'},
+  {id:'s038',name:'B LAHARI',roll:'24007-CS-038'},
+  {id:'s039',name:'LODUGU BHANU PRASAD',roll:'24007-CS-039'},
+  {id:'s040',name:'GANDHAM JAFNITHA',roll:'24007-CS-040'},
+  {id:'s041',name:'MD KHAJA BABA',roll:'24007-CS-041'},
+  {id:'s042',name:'MEKALA GEETHA',roll:'24007-CS-042'},
+  {id:'s043',name:'KOTTAYYAKAD SAI ANUSHA',roll:'24007-CS-043'},
+  {id:'s044',name:'B SAMUAL',roll:'24007-CS-044'},
+  {id:'s045',name:'V SAHASRA',roll:'24007-CS-045'},
+  {id:'s046',name:'BOOTHKURI NANDINI',roll:'24007-CS-046'},
+  {id:'s047',name:'KURVA SWATHI',roll:'24007-CS-047'},
+  {id:'s049',name:'P SAI KARTHIK',roll:'24007-CS-049'},
+  {id:'s051',name:'NUKALA SAIRAM',roll:'24007-CS-051'},
+  {id:'s053',name:'S KUMAR',roll:'24007-CS-053'},
+  {id:'s054',name:'MAHEEN',roll:'24007-CS-054'},
+  {id:'s055',name:'G SHIVA REDDY',roll:'24007-CS-055'},
+  {id:'s056',name:'VISLAVATH MOUNIKA',roll:'24007-CS-056'},
+  {id:'s057',name:'KARDAPU SPANDANA',roll:'24007-CS-057'},
+  {id:'s058',name:'BOJJA HARISH REDDY',roll:'24007-CS-058'},
+  {id:'s059',name:'N TINS PRIYA',roll:'24007-CS-059'},
+  {id:'s060',name:'DEVANI LAVANYA',roll:'24007-CS-060'},
+  {id:'s061',name:'B SOMESHWAR',roll:'24007-CS-061'},
+  {id:'s062',name:'KATRAVATH GANESH',roll:'24007-CS-062'},
+  {id:'s063',name:'NARABATHY YASHWANTH',roll:'24007-CS-063'},
+  {id:'s064',name:'BOYA ASHOK NAIDU',roll:'24007-CS-064'},
+  {id:'s065',name:'ENDRKANTI SHIVANI',roll:'24007-CS-065'},
+  {id:'s066',name:'MOOD VYSHALI',roll:'24007-CS-066'},
+  {id:'s067',name:'BUDARAPU RAMCHARAN',roll:'24007-CS-067'},
+  {id:'s069',name:'J RAJU',roll:'24007-CS-069'},
+  {id:'s070',name:'KATAMONI MOUNIKA',roll:'24007-CS-070'},
+  {id:'s071',name:'VATTEPU DINESH KARTHIK',roll:'24007-CS-071'}
+];
+
+// ── gradient palette for avatars ──
+const GRAD = [
+  'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+  'linear-gradient(135deg,#7c3aed,#a78bfa)',
+  'linear-gradient(135deg,#059669,#34d399)',
+  'linear-gradient(135deg,#d97706,#fbbf24)',
+  'linear-gradient(135deg,#db2777,#f472b6)',
+  'linear-gradient(135deg,#0284c7,#7dd3fc)',
+  'linear-gradient(135deg,#16a34a,#4ade80)',
+  'linear-gradient(135deg,#9333ea,#c084fc)',
+];
+
+// ══════════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════════
+const K_PASS  = 'cse_tp_pass';
+const K_SCHED = 'cse_schedules';
+const K_SUBS  = 'cse_submissions';
+
+const lsGet = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch{ return null; } };
+const lsSet = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const getSchedules  = () => lsGet(K_SCHED) || [];
+const setSchedules  = v  => lsSet(K_SCHED, v);
+const getSubmissions= () => lsGet(K_SUBS)  || {};
+const setSubmissions= v  => lsSet(K_SUBS,  v);
+
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getTodayImg(){
+  return getSchedules().find(s=>s.date===todayStr())||null;
+}
+function initials(name){
+  return name.split(' ').map(w=>w[0]).join('').slice(0,2);
+}
+function gradFor(id){
+  const idx = parseInt(id.replace(/\D/g,'')) % GRAD.length;
+  return GRAD[idx];
+}
+function toast(msg, type='in'){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  const icon = type==='ok'?'✓':type==='er'?'✕':'ℹ';
+  el.innerHTML=`<span>${icon}</span> ${msg}`;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(), 3400);
+}
+function showLoader(txt='Please wait…'){
+  document.getElementById('loaderTxt').textContent=txt;
+  document.getElementById('loader').classList.add('show');
+}
+function setLoaderTxt(t){ document.getElementById('loaderTxt').textContent=t; }
+function hideLoader(){ document.getElementById('loader').classList.remove('show'); }
+
+// ══════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════
+function openAuth(){
+  const modal=document.getElementById('authModal');
+  modal.classList.add('show');
+  const stored=localStorage.getItem(K_PASS);
+  if(stored){ showView('viewLogin'); setTimeout(()=>document.getElementById('lp').focus(),120); }
+  else      { showView('viewSet');   setTimeout(()=>document.getElementById('sp1').focus(),120); }
+}
+function closeAuth(){
+  document.getElementById('authModal').classList.remove('show');
+  ['sp1','sp2','lp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['setMsg','loginMsg'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; });
+  document.getElementById('btnSet').disabled=true;
+}
+function showView(id){
+  ['viewSet','viewLogin','viewReset'].forEach(v=>{
+    document.getElementById(v).style.display = v===id ? 'block' : 'none';
+  });
+}
+function chkSet(){
+  const p1=document.getElementById('sp1').value;
+  const p2=document.getElementById('sp2').value;
+  const msg=document.getElementById('setMsg');
+  const btn=document.getElementById('btnSet');
+  if(!p1){msg.textContent='';btn.disabled=true;return;}
+  if(p1.length<4){msg.style.color='var(--yellow)';msg.textContent='Min 4 characters';btn.disabled=true;return;}
+  if(!p2){msg.textContent='';btn.disabled=true;return;}
+  if(p1===p2){msg.style.color='var(--green)';msg.textContent='✓ Passwords match';btn.disabled=false;}
+  else{msg.style.color='var(--red)';msg.textContent='✕ Do not match';btn.disabled=true;}
+}
+function doSet(){
+  const p1=document.getElementById('sp1').value;
+  const p2=document.getElementById('sp2').value;
+  if(p1!==p2||p1.length<4) return;
+  localStorage.setItem(K_PASS, btoa(p1));
+  closeAuth();
+  toast('Password set! Welcome, Tej Pratap 🎓','ok');
+  enterTeacher();
+}
+function doLogin(){
+  const entered=document.getElementById('lp').value;
+  const stored=localStorage.getItem(K_PASS);
+  const msg=document.getElementById('loginMsg');
+  if(!entered){msg.textContent='Enter your password';return;}
+  if(btoa(entered)===stored){
+    closeAuth();
+    toast('Welcome back, Tej Pratap 🎓','ok');
+    enterTeacher();
+  } else {
+    msg.textContent='✕ Incorrect password';
+    document.getElementById('lp').value='';
+    document.getElementById('lp').focus();
+  }
+}
+function doReset(){
+  localStorage.removeItem(K_PASS);
+  ['sp1','sp2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('btnSet').disabled=true;
+  document.getElementById('setMsg').textContent='';
+  showView('viewSet');
+  toast('Password reset. Set a new one.','in');
+}
+
+// ══════════════════════════════════════════════════
+// CHANGE PASSWORD (inside teacher dashboard)
+// ══════════════════════════════════════════════════
+function chkCp(){
+  const np=document.getElementById('cpNew').value;
+  const nc=document.getElementById('cpCon').value;
+  const cur=document.getElementById('cpCur').value;
+  const msg=document.getElementById('cpMsg');
+  const btn=document.getElementById('btnCp');
+  if(!cur||!np){msg.textContent='';btn.disabled=true;return;}
+  if(np.length<4){msg.style.color='var(--yellow)';msg.textContent='Min 4 characters';btn.disabled=true;return;}
+  if(!nc){msg.textContent='';btn.disabled=true;return;}
+  if(np===nc){msg.style.color='var(--green)';msg.textContent='✓ Passwords match';btn.disabled=false;}
+  else{msg.style.color='var(--red)';msg.textContent='✕ Do not match';btn.disabled=true;}
+}
+function doChangePw(){
+  const cur=document.getElementById('cpCur').value;
+  const np=document.getElementById('cpNew').value;
+  const nc=document.getElementById('cpCon').value;
+  const msg=document.getElementById('cpMsg');
+  const stored=localStorage.getItem(K_PASS);
+  if(btoa(cur)!==stored){msg.style.color='var(--red)';msg.textContent='✕ Current password incorrect';document.getElementById('cpCur').value='';return;}
+  if(np!==nc||np.length<4) return;
+  localStorage.setItem(K_PASS,btoa(np));
+  ['cpCur','cpNew','cpCon'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('btnCp').disabled=true;
+  msg.style.color='var(--green)';
+  msg.textContent='✓ Password updated!';
+  toast('Password changed successfully 🔒','ok');
+  setTimeout(()=>{ msg.textContent=''; },3000);
+}
+
+// ══════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════
+function goStudent(){
+  document.getElementById('secStudent').style.display='block';
+  document.getElementById('secTeacher').style.display='none';
+  document.getElementById('pageList').style.display='block';
+  document.getElementById('pageSpeak').style.display='none';
+  document.getElementById('btnStudent').classList.add('active');
+  document.getElementById('btnTeacher').classList.remove('active');
+  renderGrid(STUDENTS);
+}
+function enterTeacher(){
+  document.getElementById('secStudent').style.display='none';
+  document.getElementById('secTeacher').style.display='block';
+  document.getElementById('btnTeacher').classList.add('active');
+  document.getElementById('btnStudent').classList.remove('active');
+  renderTeacher();
+}
+function lockTeacher(){
+  toast('Teacher mode locked','in');
+  goStudent();
+  }
+  // ══════════════════════════════════════════════════
+// STUDENT GRID
+// ══════════════════════════════════════════════════
+function renderGrid(list){
+  const subs=getSubmissions();
+  const ti=getTodayImg();
+  const g=document.getElementById('sGrid');
+  if(!list||list.length===0){
+    g.innerHTML='<div style="color:var(--muted);font-size:.88rem;grid-column:1/-1;padding:2rem 0;text-align:center">No students found.</div>';
+    return;
+  }
+  g.innerHTML=list.map(s=>{
+    const done=ti && subs[s.id] && subs[s.id][ti.id];
+    const ini=initials(s.name);
+    const grad=gradFor(s.id);
+    return `<div class="s-card ${done?'submitted':''}" onclick="selectStudent('${s.id}')">
+      <div class="s-avatar" style="background:${grad}">${ini}</div>
+      <div class="s-name">${s.name}</div>
+      <div class="s-roll">${s.roll}</div>
+      <span class="s-badge ${done?'badge-done':'badge-pend'}">${done?'✓ Submitted':'Pending'}</span>
+    </div>`;
+  }).join('');
+}
+function filterStudents(){
+  const q=document.getElementById('searchInp').value.toLowerCase().trim();
+  const filtered=q?STUDENTS.filter(s=>s.name.toLowerCase().includes(q)||s.roll.toLowerCase().includes(q)):STUDENTS;
+  renderGrid(filtered);
+}
+
+// ══════════════════════════════════════════════════
+// SELECT STUDENT
+// ══════════════════════════════════════════════════
+let currentStudent=null;
+function selectStudent(id){
+  currentStudent=STUDENTS.find(s=>s.id===id);
+  document.getElementById('pageList').style.display='none';
+  document.getElementById('pageSpeak').style.display='block';
+  document.getElementById('spName').textContent=currentStudent.name+' — '+currentStudent.roll;
+  resetRecorder();
+  loadTodayImageForStudent();
+  loadPastSubs();
+}
+function goBack(){
+  stopRec();
+  currentStudent=null;
+  document.getElementById('pageSpeak').style.display='none';
+  document.getElementById('pageList').style.display='block';
+  document.getElementById('searchInp').value='';
+  renderGrid(STUDENTS);
+}
+
+// ══════════════════════════════════════════════════
+// TODAY IMAGE → STUDENT
+// ══════════════════════════════════════════════════
+function loadTodayImageForStudent(){
+  const ti=getTodayImg();
+  const noMsg=document.getElementById('noImgMsg');
+  const content=document.getElementById('speakContent');
+  if(!ti){ noMsg.style.display='block'; content.style.display='none'; return; }
+  noMsg.style.display='none'; content.style.display='block';
+  document.getElementById('todayImg').src=ti.dataUrl;
+  document.getElementById('todayImg').style.display='block';
+  document.getElementById('imgEmpty').style.display='none';
+  document.getElementById('imgDateBadge').textContent=ti.date;
+  document.getElementById('imgDateBadge').style.display='block';
+  document.getElementById('imgFoot').style.display='block';
+  document.getElementById('todayTag').innerHTML=`<span class="sbadge sb-live" style="font-size:.7rem">📅 ${ti.title}</span>`;
+}
+
+// ══════════════════════════════════════════════════
+// RECORDER  — Live mic + live Speech Recognition
+// ══════════════════════════════════════════════════
+let mediaRec=null, chunks=[], recBlob=null, recURL=null;
+let timerIv=null, elapsed=0, MAX=180;
+let audioCtx=null, analyserNode=null, animFr=null, isRec=false;
+let liveTranscript='';   // built up in real-time during recording
+let srEngine=null;       // SpeechRecognition instance
+
+function resetRecorder(){
+  elapsed=0; isRec=false; recBlob=null; recURL=null; liveTranscript='';
+  clearInterval(timerIv); cancelAnimationFrame(animFr);
+  updateTimer(0);
+  setEl('btnRec',{disabled:false});
+  setEl('btnStop',{disabled:true});
+  setEl('btnPlay',{disabled:true});
+  setEl('btnAnalyse',{disabled:true});
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('recIndicator').style.display='none';
+  document.getElementById('liveCaption').textContent='Start speaking after pressing Record…';
+  document.getElementById('micErrorBox').style.display='none';
+  clearWave();
+}
+function setEl(id,props){ const el=document.getElementById(id); if(el) Object.assign(el,props); }
+
+function updateTimer(sec){
+  const rem=MAX-sec;
+  const m=Math.floor(rem/60), s=rem%60;
+  const tn=document.getElementById('timerNum');
+  tn.textContent=`${m}:${String(s).padStart(2,'0')}`;
+  tn.className='timer-num'+(isRec?(rem<=10?' danger':rem<=30?' warn':' run'):'');
+  const circ=251.33;
+  document.getElementById('timerRing').style.strokeDashoffset=circ*(1-sec/MAX);
+  document.getElementById('timerRing').style.stroke=rem<=10?'var(--red)':rem<=30?'var(--yellow)':'var(--accent)';
+}
+
+async function startRec(){
+  // 1) Check if browser supports getUserMedia
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showMicError('Your browser does not support microphone access. Please use Chrome or Edge.');
+    return;
+  }
+  // 2) Request mic permission explicitly
+  let stream;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+  } catch(err){
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      showMicError('Microphone permission was denied. Please click the 🔒 or 🎤 icon in your browser address bar and allow microphone access, then try again.');
+    } else if(err.name==='NotFoundError'){
+      showMicError('No microphone found. Please connect a microphone and try again.');
+    } else {
+      showMicError('Could not access microphone: '+err.message);
+    }
+    return;
+  }
+
+  // 3) Set up audio context for waveform
+  try{
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    analyserNode=audioCtx.createAnalyser(); analyserNode.fftSize=256;
+    audioCtx.createMediaStreamSource(stream).connect(analyserNode);
+  } catch(e){ /* waveform optional */ }
+
+  // 4) Set up MediaRecorder
+  const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    ? 'audio/webm;codecs=opus'
+    : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+  mediaRec = mimeType ? new MediaRecorder(stream,{mimeType}) : new MediaRecorder(stream);
+  chunks=[];
+  mediaRec.ondataavailable=e=>{ if(e.data&&e.data.size>0) chunks.push(e.data); };
+  mediaRec.onstop=()=>{
+    const blob=new Blob(chunks,{type: mimeType||'audio/webm'});
+    recBlob=blob;
+    recURL=URL.createObjectURL(blob);
+    setEl('btnPlay',{disabled:false});
+    setEl('btnAnalyse',{disabled:false});
+  };
+  mediaRec.start(250); // collect data every 250ms
+  isRec=true;
+
+  // 5) Start live Speech Recognition simultaneously
+  liveTranscript='';
+  startLiveSR();
+
+  // 6) UI updates
+  setEl('btnRec',{disabled:true});
+  setEl('btnStop',{disabled:false});
+  document.getElementById('recIndicator').style.display='inline-flex';
+  document.getElementById('micErrorBox').style.display='none';
+  elapsed=0;
+  timerIv=setInterval(()=>{ elapsed++; updateTimer(elapsed); if(elapsed>=MAX) stopRec(); },1000);
+  drawWave();
+  toast('🎙 Recording started — speak now!','in');
+}
+
+function startLiveSR(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return; // silent — we'll use text fallback at analyse time
+  try{
+    srEngine=new SR();
+    srEngine.continuous=true;
+    srEngine.interimResults=true;
+    srEngine.lang='en-IN';
+    srEngine.onresult=e=>{
+      let interim='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) liveTranscript+=e.results[i][0].transcript+' ';
+        else interim+=e.results[i][0].transcript;
+      }
+      const cap=document.getElementById('liveCaption');
+      if(cap) cap.textContent=(liveTranscript+interim).trim();
+    };
+    srEngine.onerror=e=>{
+      // network/no-speech errors are non-fatal — just restart SR
+      if(isRec&&(e.error==='no-speech'||e.error==='network')){
+        try{ srEngine.stop(); setTimeout(()=>{ if(isRec) startLiveSR(); },300); } catch(ex){}
+      }
+    };
+    srEngine.onend=()=>{ if(isRec) setTimeout(()=>{ try{ srEngine.start(); }catch(ex){} },200); };
+    srEngine.start();
+  } catch(e){ /* SR unavailable — fallback at analyse step */ }
+}
+
+function stopRec(){
+  isRec=false;
+  // Stop SR
+  if(srEngine){ try{ srEngine.onend=null; srEngine.stop(); }catch(e){} srEngine=null; }
+  // Stop MediaRecorder
+  if(mediaRec&&mediaRec.state!=='inactive'){
+    mediaRec.stop();
+    mediaRec.stream.getTracks().forEach(t=>t.stop());
+  }
+  clearInterval(timerIv); cancelAnimationFrame(animFr);
+  setEl('btnRec',{disabled:false});
+  setEl('btnStop',{disabled:true});
+  document.getElementById('recIndicator').style.display='none';
+  clearWave();
+  if(elapsed>0) toast(`⏹ Recording stopped — ${elapsed}s captured`,'ok');
+}
+
+function playRec(){ if(recURL){ const a=new Audio(recURL); a.play(); } }
+
+function showMicError(msg){
+  const box=document.getElementById('micErrorBox');
+  document.getElementById('micErrorTxt').innerHTML=msg;
+  box.style.display='block';
+}
+
+function clearWave(){
+  const cv=document.getElementById('waveCanvas');
+  if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+}
+function drawWave(){
+  const cv=document.getElementById('waveCanvas');
+  if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const buf=new Uint8Array(analyserNode?analyserNode.frequencyBinCount:128);
+  (function draw(){
+    animFr=requestAnimationFrame(draw);
+    if(!isRec){ ctx.clearRect(0,0,cv.width,cv.height); return; }
+    if(analyserNode) analyserNode.getByteTimeDomainData(buf);
+    ctx.fillStyle='#1a2236'; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.lineWidth=2; ctx.strokeStyle='#38bdf8'; ctx.beginPath();
+    const sw=cv.width/buf.length;
+    buf.forEach((v,i)=>{ const y=(v/128)*cv.height/2; i===0?ctx.moveTo(0,y):ctx.lineTo(i*sw,y); });
+    ctx.stroke();
+  })();
+}
+
+// ══════════════════════════════════════════════════
+// ANALYSE
+// ══════════════════════════════════════════════════
+async function analyse(){
+  if(!recBlob){ toast('No recording found. Please record first.','er'); return; }
+
+  // Use live transcript if captured, else show text input modal
+  let transcript = liveTranscript.trim();
+
+  if(!transcript){
+    // Fallback: ask student to type what they said
+    transcript = await askTextFallback();
+  }
+   if(!transcript){ toast('No speech text to analyse.','er'); return; }
+
+  showLoader('Analysing grammar & vocabulary with AI…');
+  try{
+    const result=await callClaude(transcript);
+    hideLoader();
+    showResults(transcript, result);
+  } catch(e){ hideLoader(); toast('Analysis failed: '+e.message,'er'); }
+}
+
+function askTextFallback(){
+  return new Promise(resolve=>{
+    // Show the text-entry fallback modal
+    document.getElementById('fallbackModal').style.display='flex';
+    document.getElementById('fallbackText').value='';
+    document.getElementById('fallbackText').focus();
+    window._fallbackResolve=resolve;
+  });
+}
+function submitFallback(){
+  const txt=document.getElementById('fallbackText').value.trim();
+  document.getElementById('fallbackModal').style.display='none';
+  if(window._fallbackResolve){ window._fallbackResolve(txt); window._fallbackResolve=null; }
+}
+function cancelFallback(){
+  document.getElementById('fallbackModal').style.display='none';
+  if(window._fallbackResolve){ window._fallbackResolve(''); window._fallbackResolve=null; }
+}
+
+async function callClaude(transcript){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:`You are an English language teacher. A student recorded a spoken description of an image. Here is the transcription:
+
+"${transcript}"
+
+Analyse it and return ONLY a JSON object (no markdown, no extra text) with this exact structure:
+{
+  "corrected": "The fully corrected text with all mistakes fixed",
+  "scores": { "grammar": 75, "vocabulary": 70, "fluency": 78, "overall": 74 },
+  "mistakes": [
+    { "type": "Grammar", "original": "They is walking", "corrected": "They are walking", "explanation": "Use 'are' with plural subject 'they'" }
+  ],
+  "feedback": "2-3 sentences of encouraging, constructive feedback for the student"
+}
+Scores are integers 0-100. Find ALL grammar and vocabulary mistakes. Return ONLY valid JSON.`}]
+    })
+  });
+  const data=await res.json();
+  const txt=data.content.map(i=>i.text||'').join('');
+  return JSON.parse(txt.replace(/```json|```/g,'').trim());
+}
+
+function showResults(transcript, r){
+  document.getElementById('resultsCard').style.display='block';
+  document.getElementById('transcriptBox').textContent=transcript;
+
+  // scores
+  document.getElementById('scoreRow').innerHTML=Object.entries(r.scores).map(([k,v])=>{
+    const cls=v>=75?'sc-good':v>=55?'sc-mid':'sc-bad';
+    return `<div class="score-chip"><div class="sc-label">${k.toUpperCase()}</div><div class="sc-val ${cls}">${v}</div></div>`;
+  }).join('');
+
+  // corrected
+  document.getElementById('correctedBox').innerHTML=
+    `<div style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.6rem;margin-bottom:6px">✓ CORRECTED</div>`+
+    `<div>${r.corrected}</div>`+
+    (r.feedback?`<div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid rgba(52,211,153,.2);color:var(--muted2);font-size:.8rem;font-style:italic">${r.feedback}</div>`:'');
+
+  // mistakes
+  const ml=document.getElementById('mistakesList');
+  if(!r.mistakes||r.mistakes.length===0){
+    ml.innerHTML='<div style="color:var(--green);font-size:.83rem;padding:.4rem 0">🎉 No mistakes found — excellent work!</div>';
+  } else {
+    ml.innerHTML=r.mistakes.map(m=>`
+      <div class="m-item">
+        <div class="m-type">⚠ ${m.type||'Mistake'}</div>
+        <div class="m-orig">${m.original}</div>
+        <div class="m-arrow">↓ should be</div>
+        <div class="m-fix">✓ ${m.corrected}</div>
+        <div class="m-exp">${m.explanation||''}</div>
+      </div>`).join('');
+  }
+  document.getElementById('resultsCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ══════════════════════════════════════════════════
+// SAVE SUBMISSION
+// ══════════════════════════════════════════════════
+function saveSubmission(){
+  const ti=getTodayImg();
+  if(!ti||!currentStudent){ toast('Nothing to save','er'); return; }
+  const subs=getSubmissions();
+  if(!subs[currentStudent.id]) subs[currentStudent.id]={};
+  subs[currentStudent.id][ti.id]={
+    date:todayStr(),
+    imageTitle:ti.title,
+    transcript:document.getElementById('transcriptBox').textContent,
+    timestamp:new Date().toISOString()
+  };
+  setSubmissions(subs);
+  toast('Submission saved! 🎉','ok');
+  document.getElementById('btnSave').textContent='✓ Saved';
+  document.getElementById('btnSave').disabled=true;
+  loadPastSubs();
+}
+function loadPastSubs(){
+  if(!currentStudent) return;
+  const subs=getSubmissions()[currentStudent.id]||{};
+  const entries=Object.values(subs);
+  const card=document.getElementById('pastCard');
+  const list=document.getElementById('pastList');
+  if(!entries.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  list.innerHTML=entries.map(e=>`
+    <details class="sub-details">
+      <summary><span>${e.imageTitle}</span><span style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted)">${e.date}</span></summary>
+      <div class="sub-body">${e.transcript}</div>
+    </details>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+// TEACHER: SCHEDULE IMAGE
+// ══════════════════════════════════════════════════
+let pendingFile=null;
+function handleFile(e){ processImg(e.target.files[0]); }
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag');
+  processImg(e.dataTransfer.files[0]);
+}
+function processImg(file){
+  if(!file||!file.type.startsWith('image/')){ toast('Please select an image','er'); return; }
+  const r=new FileReader();
+  r.onload=ev=>{
+    pendingFile={dataUrl:ev.target.result,name:file.name};
+    document.getElementById('previewImg').src=ev.target.result;
+    document.getElementById('previewWrap').style.display='block';
+    if(!document.getElementById('imgTitle').value)
+      document.getElementById('imgTitle').value=file.name.replace(/\.[^.]+$/,'');
+    toast('Image selected ✓','ok');
+  };
+  r.readAsDataURL(file);
+}
+function scheduleImg(){
+  if(!pendingFile){ toast('Please select an image','er'); return; }
+  const title=document.getElementById('imgTitle').value.trim();
+  const date=document.getElementById('imgDate').value;
+  if(!title){ toast('Enter an image title','er'); return; }
+  if(!date){ toast('Select a scheduled date','er'); return; }
+  const schedules=getSchedules();
+  if(schedules.find(s=>s.date===date)){ toast('An image is already scheduled for this date','er'); return; }
+  schedules.push({id:'img_'+Date.now(), title, date, dataUrl:pendingFile.dataUrl, addedAt:new Date().toISOString()});
+  setSchedules(schedules);
+  // reset
+  pendingFile=null;
+  document.getElementById('previewWrap').style.display='none';
+  document.getElementById('imgTitle').value='';
+  document.getElementById('imgDate').value='';
+  document.getElementById('fileInp').value='';
+  toast(`Image scheduled for ${date} ✓`,'ok');
+  renderTeacher();
+}
+function deleteSchedule(id){
+  setSchedules(getSchedules().filter(s=>s.id!==id));
+  toast('Schedule removed','in');
+  renderTeacher();
+}
+
+// ══════════════════════════════════════════════════
+// TEACHER: RENDER
+// ══════════════════════════════════════════════════
+function renderTeacher(){
+  const schedules=getSchedules().sort((a,b)=>a.date.localeCompare(b.date));
+  const today=todayStr();
+  const subs=getSubmissions();
+
+  // Scheduled list
+  const sl=document.getElementById('schedList');
+  if(!schedules.length){
+    sl.innerHTML='<div style="color:var(--muted);font-size:.83rem;padding:1.5rem 0;text-align:center">No images scheduled yet</div>';
+  } else {
+    sl.innerHTML=schedules.map(s=>{
+      const cls=s.date===today?'sb-live':s.date<today?'sb-past':'sb-up';
+      const lbl=s.date===today?'LIVE TODAY':s.date<today?'PAST':'UPCOMING';
+      return `<div class="sched-item">
+        <img class="sched-thumb" src="${s.dataUrl}" alt="">
+        <div style="flex:1">
+          <div class="sched-name">${s.title}</div>
+          <div class="sched-date">${s.date}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+          <span class="sbadge ${cls}">${lbl}</span>
+          <button class="del-btn" onclick="deleteSchedule('${s.id}')">✕ delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Progress
+  const todayImgId=schedules.find(s=>s.date===today)?.id;
+  const pw=document.getElementById('progressWrap');
+  const rows=STUDENTS.map(s=>({name:s.name,roll:s.roll,done:!!(todayImgId&&subs[s.id]?.[todayImgId])}));
+  const doneCount=rows.filter(r=>r.done).length;
+  pw.innerHTML=`
+    <div class="pbar-wrap">
+      <div class="pbar-top"><span>Submitted today</span><span style="color:var(--accent);font-family:'JetBrains Mono',monospace">${doneCount} / ${STUDENTS.length}</span></div>
+      <div class="pbar"><div class="pbar-fill" style="width:${(doneCount/STUDENTS.length*100).toFixed(1)}%"></div></div>
+    </div>
+    ${rows.map(r=>`<div class="prog-row"><span>${r.name}</span><span style="color:${r.done?'var(--green)':'var(--muted)'};font-size:.7rem">${r.done?'✓ Done':'—'}</span></div>`).join('')}`;
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  renderGrid(STUDENTS);
+});
+</script>
+</body>
+</html>
